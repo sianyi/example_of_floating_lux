@@ -5,16 +5,13 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
 import android.content.Intent;
 import android.graphics.Color;
-import android.graphics.PixelFormat;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.net.Uri;
-import android.os.Build;
 import android.provider.Settings;
 import android.util.Log;
-import android.view.GestureDetector;
 import android.view.Gravity;
 import android.view.View;
 import android.view.WindowManager;
@@ -22,8 +19,9 @@ import android.widget.Button;
 import android.widget.TextView;
 
 import io.github.hyuwah.draggableviewlib.DraggableUtils;
+import io.github.hyuwah.draggableviewlib.OverlayDraggableListener;
 
-public class MainActivity extends AppCompatActivity implements SensorEventListener {
+public class MainActivity extends AppCompatActivity implements SensorEventListener, OverlayDraggableListener {
 
     private SensorManager sensmgr;
     private Sensor accsensor;
@@ -62,33 +60,16 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     }
 
     private void InitialTextView(){
+
         floatingLuxView = new TextView(this);
-        floatingLuxView.setText("Hi I am floating View");
         floatingLuxView.setTextColor(Color.rgb(255, 255, 0));
         floatingLuxView.setTextSize(32f);
         floatingLuxView.setShadowLayer(10, 5, 5, Color.rgb(56, 56, 56));
 
-        //TODO, why this implementation case issue ?
-        DraggableUtils.makeDraggable(floatingLuxView);
-
+        params = DraggableUtils.makeOverlayDraggable(floatingLuxView, this);
         windowManager = (WindowManager)getSystemService(WINDOW_SERVICE);
 
-        int LAYOUT_FLAG;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            LAYOUT_FLAG = WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY;
-        } else {
-            LAYOUT_FLAG = WindowManager.LayoutParams.TYPE_PHONE;
-        }
-
-        params = new WindowManager.LayoutParams(
-                WindowManager.LayoutParams.WRAP_CONTENT,
-                WindowManager.LayoutParams.WRAP_CONTENT,
-                LAYOUT_FLAG,
-                WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN |
-                        WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
-                PixelFormat.TRANSLUCENT);
         params.gravity = Gravity.TOP|Gravity.LEFT;
-
     }
 
     @Override
@@ -153,4 +134,10 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             startActivityForResult(intent, 1234);
         }
     }
+
+    @Override
+    public void onParamsChanged(WindowManager.LayoutParams layoutParams) {
+        windowManager.updateViewLayout(floatingLuxView, layoutParams); // Move overlay view
+    }
+
 }
